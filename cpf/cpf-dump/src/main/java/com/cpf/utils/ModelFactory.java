@@ -38,6 +38,7 @@ public class ModelFactory {
         optionsMap.put(ModelTypeEnum.PART.toString(),Collections.unmodifiableList(getPART()));
         optionsMap.put(ModelTypeEnum.NAIVE_BAYES.toString(),Collections.unmodifiableList(getBAYES()));
         optionsMap.put(ModelTypeEnum.DECISION_STUMP.toString(),Collections.unmodifiableList(getDecisionStump()));
+        optionsMap.put(ModelTypeEnum.ONE_R.toString(),Collections.unmodifiableList(getOneR()));
         classifierMap.put("weka.classifiers.meta.AdaBoostM1","AdaBoostM1");
         classifierMap.put("weka.classifiers.meta.AdditiveRegression","AdditiveRegression");
         classifierMap.put("weka.classifiers.meta.AttributeSelectedClassifier","AttributeSelectedClassifier");

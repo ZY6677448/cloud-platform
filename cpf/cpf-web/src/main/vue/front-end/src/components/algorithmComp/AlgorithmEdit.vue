@@ -45,7 +45,7 @@
   
             </div>
   
-            <div v-else>
+            <div v-else-if="option.valueType == 'DOUBLE'">
   
               <el-form-item :label="option.desc" :prop="option.key+'.value'">
   
