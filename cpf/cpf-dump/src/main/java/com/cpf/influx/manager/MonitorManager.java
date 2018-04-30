@@ -42,6 +42,9 @@ public class MonitorManager extends ServiceTemplate {
      * @return
      */
     public MonitorDO queryAVGByTime(MonitorDO monitorDO, Long minutes){
+        if(ValidationUtil.isNull(minutes)){
+            return monitorDO;
+        }
         Map<String,String> tagMap = Maps.newHashMap();
         RuleTypeEnum ruleType = RuleTypeEnum.typeOf(monitorDO.getType());
         if(ruleType == null){

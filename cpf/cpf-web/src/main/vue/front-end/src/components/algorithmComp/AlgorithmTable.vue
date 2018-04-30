@@ -33,7 +33,6 @@
       >
       <template slot-scope="scope">
         <el-button type="text" size="small" @click="detail(scope.row)">算法配置</el-button>
-        <el-button type="text" size="small" @click="editCol(scope.row)">编辑</el-button>
         <el-button type="text" size="small" @click="deleteAggreModel(scope.row)">删除</el-button>
       </template>
     </el-table-column>

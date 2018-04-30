@@ -75,7 +75,7 @@ public class ModelUtil  {
      */
     private static void serialization(Long id, Object classifier){
         try {
-            SerializationHelper.write(MODEL_PATH +id+ MODEL_SUFFIX,classifier);
+            SerializationHelper.write(generateModelFileName(id),classifier);
         } catch (Exception e) {
             throw new SystemException(CpfDumpConstants.SERIALIZATION_ERROR,e);
         }
@@ -116,7 +116,7 @@ public class ModelUtil  {
     public static Object deSerialization(Long id){
         Object classifier = null;
         try {
-            classifier  =  SerializationHelper.read(MODEL_PATH +id+ MODEL_SUFFIX);
+            classifier  =  SerializationHelper.read(generateModelFileName(id));
         } catch (Exception e) {
             throw new SystemException(CpfDumpConstants.DESERIALIZATION_ERROR,e);
         }
@@ -233,7 +233,7 @@ public class ModelUtil  {
         Instances instances = monitorDOS2Instances(monitorDOList);
         ArffSaver saver = new ArffSaver();
         saver.setInstances(instances);
-        String fileName = MODEL_PATH + System.currentTimeMillis()+ ARFF_SUFFIX;
+        String fileName = generateArffFileName(System.currentTimeMillis());
         try {
             saver.setFile(new File(fileName));
             saver.writeBatch();
@@ -243,6 +243,56 @@ public class ModelUtil  {
         return fileName;
     }
 
+    /**
+     * 删除本地算法模型
+     * @param modelDO
+     */
+    public static void deleteModel(ModelDO modelDO){
+        File file = new File(generateModelFileName(modelDO.getId()));
+        if(file.exists()){
+            if(file.delete()){
+                BusinessLogger.infoLog("ModelUtil.deleteModel",
+                        new String[]{JSON.toJSONString(modelDO)},
+                        "success",
+                        "删除模型成功",
+                        logger);
+            }else {
+                BusinessLogger.errorLog("ModelUtil.deleteModel",
+                        new String[]{JSON.toJSONString(modelDO)},
+                        "DELETE_MODEL_FAILED",
+                        "删除模型失败",
+                        logger);
+            }
+        }
+    }
+
+    /**
+     * 删除本地多个算法模型
+     * @param modelDOList
+     */
+    public static void deleteModels(List<ModelDO> modelDOList){
+        if(CollectionUtils.isNotEmpty(modelDOList)){
+            modelDOList.forEach((modelDO -> deleteModel(modelDO)));
+        }
+    }
+
+    /**
+     * 根据模型id产生模型的全路径名
+     * @param id
+     * @return
+     */
+    private static String generateModelFileName(Long id){
+        return MODEL_PATH + id + MODEL_SUFFIX;
+    }
+    /**
+     * 根据模型id产生训练样本的全路径名
+     * @param id
+     * @return
+     */
+    private static String generateArffFileName(Long id){
+        return MODEL_PATH + id + ARFF_SUFFIX;
+
+    }
     /**
      * 判断value是否符合option的指定数据类型
      * @param value

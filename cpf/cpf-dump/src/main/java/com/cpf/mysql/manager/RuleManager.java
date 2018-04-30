@@ -16,7 +16,6 @@ import java.util.List;
 /**
  * @author jieping
  * @create 2018-04-05
- * @desc 定时训练任务
  **/
 @Component
 public class RuleManager extends ServiceTemplate {

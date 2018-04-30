@@ -1,5 +1,6 @@
 package com.cpf.mysql.manager;
 
+import com.cpf.influx.holder.ModelHolder;
 import com.cpf.mysql.dao.AggreModelDAO;
 import com.cpf.mysql.dao.PO.AggreModelPO;
 import com.cpf.mysql.manager.DO.AggreModelDO;
@@ -7,6 +8,7 @@ import com.cpf.mysql.manager.DO.ModelDO;
 import com.cpf.service.CallbackResult;
 import com.cpf.service.ServiceExecuteTemplate;
 import com.cpf.service.ServiceTemplate;
+import com.cpf.task.TrainTask;
 import com.cpf.utils.DOPOConverter;
 import com.cpf.utils.ModelUtil;
 import com.cpf.utils.ValidationUtil;
@@ -16,16 +18,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * @author jieping
  * @create 2018-04-12
- * @desc 定时训练任务
  **/
 @Component
 public class AggreModelManager extends ServiceTemplate {
     @Autowired
     private AggreModelDAO aggreModelDAO;
     private static Logger logger = LoggerFactory.getLogger(AggreModelManager.class);
+    @Autowired
+    private TrainTask trainTask;
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private ModelHolder modelHolder;
 
     /**
      * 保存聚合模型
@@ -70,7 +78,10 @@ public class AggreModelManager extends ServiceTemplate {
                 aggreModelDO.getModels().add(modelDO);
                 AggreModelDO saveResult = DOPOConverter.aggreModelPO2DO(aggreModelDAO.save(DOPOConverter.aggreModelDO2PO(aggreModelDO)));
                 ModelDO returnResult =  saveResult.getModels().stream().filter(model -> model.getName().equals(modelDO.getName())).findFirst().orElse(null);
+                //持久化
                 ModelUtil.serialization(returnResult);
+                //异步操作 训练模型
+                executorService.submit(()->{ trainTask.train(returnResult); });
                 return new CallbackResult<Object>(returnResult,true);
             }
         });
@@ -112,6 +123,12 @@ public class AggreModelManager extends ServiceTemplate {
             }
             @Override
             public CallbackResult<Object> executeAction() {
+                AggreModelDO aggreModelDO = DOPOConverter.aggreModelPO2DO(aggreModelDAO.getById(id));
+                //删除内存算法模型
+                modelHolder.delete(aggreModelDO);
+                //删除硬盘算法模型
+                ModelUtil.deleteModels(aggreModelDO.getModels());
+                //删除数据库算法模型
                 aggreModelDAO.deleteById(id);
                 return CallbackResult.success();
             }

@@ -20,7 +20,6 @@ import java.util.concurrent.Executors;
 /**
  * @author jieping
  * @create 2018-04-21
- * @desc 定时训练任务
  **/
 @RestController
 @RequestMapping("/monitor")

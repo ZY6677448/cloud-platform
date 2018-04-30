@@ -96,7 +96,7 @@ public class TrainTask extends ServiceTemplate  {
                AggreModelDO aggreModelDO = aggreModelManager.get(modelDO).getResult();
                List<MonitorDO> trainList = getTrainSamples(aggreModelDO.getScene());
                ModelUtil.train(modelDO,trainList);
-               modelHolder.refresh(aggreModelDO);
+               modelHolder.refresh(modelDO);
                return CallbackResult.success();
            }
        });

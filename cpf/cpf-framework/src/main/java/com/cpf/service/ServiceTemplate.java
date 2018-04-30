@@ -55,7 +55,7 @@ public class ServiceTemplate {
             return CallbackResult.failure(ErrorConstants.SYSTEM_RRROR,e);
         }
         String executeTime = String.valueOf(System.currentTimeMillis() -time)+"ms";
-        BusinessLogger.infoLog(methodName,null,JSON.toJSONString(executeResult.getResult()),executeTime,logger);
+        BusinessLogger.infoLog(methodName,null,"executeTime",executeTime,logger);
         return executeResult;
     }
 }

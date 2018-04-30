@@ -2,6 +2,7 @@ package com.cpf.mysql.manager;
 
 import com.cpf.constants.CpfDumpConstants;
 import com.cpf.exception.BusinessException;
+import com.cpf.influx.holder.ModelHolder;
 import com.cpf.mysql.dao.ModelDAO;
 import com.cpf.mysql.dao.PO.ModelPO;
 import com.cpf.mysql.manager.DO.ModelDO;
@@ -31,33 +32,11 @@ public class ModelManager extends ServiceTemplate {
     private ModelDAO modelDAO;
     @Autowired
     private TrainTask trainTask;
+    @Autowired
+    private ModelHolder modelHolder;
     private ExecutorService executorService = Executors.newFixedThreadPool(5);
     private static Logger logger = LoggerFactory.getLogger(ModelManager.class);
 
-    /**
-     * 添加模型
-     * @param modelDO
-     * @return
-     */
-    public CallbackResult<ModelDO> addModel(ModelDO modelDO){
-        Object  result = execute(logger, "addModel", new ServiceExecuteTemplate() {
-            @Override
-            public CallbackResult<Object> checkParams() {
-                if(modelDO==null){
-                    return CallbackResult.failure();
-                }
-                return CallbackResult.success();
-            }
-            @Override
-            public CallbackResult<Object> executeAction() {
-                //模型参数持久化
-                ModelUtil.serialization(modelDO);
-                ModelPO modelPO = modelDAO.save(DOPOConverter.modelDO2PO(modelDO));
-                return new CallbackResult<Object>(DOPOConverter.modelPO2DO(modelPO),true);
-            }
-        });
-        return (CallbackResult<ModelDO>)result;
-    }
 
     /**
      * 获取所有模型
@@ -98,6 +77,7 @@ public class ModelManager extends ServiceTemplate {
             @Override
             public CallbackResult<Object> executeAction() {
                 ModelPO modelPO = modelDAO.save(DOPOConverter.modelDO2PO(modelDO));
+                ModelUtil.setOptions(modelDO);
                 //异步进行模型训练
                 executorService.submit(()->trainTask.train(modelDO));
                 return new CallbackResult<Object>(DOPOConverter.modelPO2DO(modelPO),true);
@@ -122,6 +102,12 @@ public class ModelManager extends ServiceTemplate {
             }
             @Override
             public CallbackResult<Object> executeAction() {
+                ModelDO modelDO = DOPOConverter.modelPO2DO(modelDAO.getById(id));
+                //删除内存中算法模型
+                modelHolder.delete(modelDO);
+                //删除硬盘中的算法模型
+                ModelUtil.deleteModel(modelDO);
+                //删除数据库中的算法模型
                 modelDAO.deleteById(id);
                 return CallbackResult.success();
             }

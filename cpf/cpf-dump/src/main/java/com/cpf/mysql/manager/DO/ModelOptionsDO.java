@@ -7,7 +7,6 @@ import java.util.List;
 /**
  * @author jieping
  * @create 2018-04-09
- * @desc 定时训练任务
  **/
 @Data
 public class ModelOptionsDO {

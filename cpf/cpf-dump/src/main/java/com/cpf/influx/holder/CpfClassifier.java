@@ -10,6 +10,7 @@ import weka.classifiers.Classifier;
  **/
 @Data
 public class CpfClassifier {
+    private Long id;
     private Double weight;
     private Classifier classifier;
 }

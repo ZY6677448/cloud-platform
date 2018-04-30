@@ -11,6 +11,7 @@ import com.cpf.logger.BusinessLogger;
 import com.cpf.service.CallbackResult;
 import com.cpf.service.ServiceExecuteTemplate;
 import com.cpf.service.ServiceTemplate;
+import com.cpf.utils.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,14 +60,17 @@ public class MonitorEngine extends ServiceTemplate{
                 for(RuleDO ruleDO : ruleDOList){
                     //判断该时刻是否满足监控规则
                     if(verify(monitorDO,ruleDO)){
-                        //判断一定时间内的平均值是否满足监控规则
-                        MonitorDO meanMonitor = monitorManager.queryAVGByTime(monitorDO,ruleDO.getTime());
-                        if(verify(meanMonitor,ruleDO)){
-                            monitorDO.getData().put(CLASS_TAG,"true");
-                            result.setResult(DANGER);
-                            warn(meanMonitor,ruleDO);
-                        }else {
-                            monitorDO.getData().put(CLASS_TAG,"false");
+                        //如果监控规则有规定持续时间
+                        if(ValidationUtil.isNotNull(ruleDO.getTime())){
+                            //判断一定时间内的平均值是否满足监控规则
+                            MonitorDO meanMonitor = monitorManager.queryAVGByTime(monitorDO,ruleDO.getTime());
+                            if(verify(meanMonitor,ruleDO)){
+                                monitorDO.getData().put(CLASS_TAG,"true");
+                                result.setResult(DANGER);
+                                warn(meanMonitor,ruleDO);
+                            }else {
+                                monitorDO.getData().put(CLASS_TAG,"false");
+                            }
                         }
                         monitorManager.addMonitor(monitorDO);
                     }

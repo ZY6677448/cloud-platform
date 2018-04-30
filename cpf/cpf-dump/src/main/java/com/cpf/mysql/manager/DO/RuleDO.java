@@ -7,7 +7,6 @@ import java.util.Map;
 /**
  * @author jieping
  * @create 2018-04-18
- * @desc 定时训练任务
  **/
 @Data
 public class RuleDO {

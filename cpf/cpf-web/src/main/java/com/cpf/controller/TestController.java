@@ -5,6 +5,7 @@ import com.cpf.influx.holder.ModelHolder;
 import com.cpf.influx.manager.DO.MonitorDO;
 import com.cpf.influx.manager.MonitorManager;
 import com.cpf.ml.MlEngine;
+import com.cpf.monitor.MonitorEngine;
 import com.cpf.monitor.RuleHolder;
 import com.cpf.mysql.dao.AggreModelDAO;
 import com.cpf.task.TrainTask;
@@ -35,13 +36,18 @@ public class TestController {
     @Autowired
     private MonitorManager monitorManager;
     @Autowired
+    private MonitorEngine monitorEngine;
+    @Autowired
     private AggreModelDAO aggreModelDAO;
     @RequestMapping(value = "/test", method = RequestMethod.GET)
     public ResponseEntity<Object> test() throws Exception {
-        List<MonitorDO> monitorDOList = monitorManager.queryDataByTime("win_cpu",null,null,null,2L).getResult();
-        mlEngine.predict(monitorDOList.get(0));
+//        List<MonitorDO> monitorDOList = monitorManager.queryDataByTime("win_cpu",null,null,null,2L).getResult();
+//        mlEngine.predict(monitorDOList.get(0));
 //        List<AggreModelPO> aggreModelPOS = aggreModelDAO.findAll();
 //        AggreModelPO aggreModelPO = aggreModelDAO.findByModelsIsContaining(aggreModelPOS.get(0).getModels().get(0));
-        return new ResponseEntity<>("test",HttpStatus.OK);
+
+        List<MonitorDO> monitorDOList = monitorManager.queryDataByTime("win_cpu",null,null,null,1L).getResult();
+        monitorEngine.monitor(monitorDOList.get(0));
+        return new ResponseEntity<>(monitorDOList.get(0),HttpStatus.OK);
     }
 }
