@@ -1,7 +1,7 @@
 package com.cpf.ml;
 
 import weka.classifiers.evaluation.Evaluation;
-import weka.classifiers.meta.Bagging;
+import weka.classifiers.meta.AdaBoostM1;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
@@ -25,7 +25,7 @@ public class test {
         //set class index to the last attribute
         dataset.setClassIndex(dataset.numAttributes()-1);
         //create and build the classifier!
-        Bagging svm = new Bagging();
+        AdaBoostM1 svm = new AdaBoostM1();
         svm.setOptions(null);
         svm.buildClassifier(dataset);
         double predict = svm.classifyInstance(dataset.get(1));

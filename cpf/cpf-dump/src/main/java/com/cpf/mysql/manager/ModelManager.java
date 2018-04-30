@@ -79,7 +79,7 @@ public class ModelManager extends ServiceTemplate {
                 ModelPO modelPO = modelDAO.save(DOPOConverter.modelDO2PO(modelDO));
                 ModelUtil.setOptions(modelDO);
                 //异步进行模型训练
-                executorService.submit(()->trainTask.train(modelDO));
+               // executorService.submit(()->trainTask.train(modelDO));
                 return new CallbackResult<Object>(DOPOConverter.modelPO2DO(modelPO),true);
             }
         });

@@ -126,7 +126,7 @@ public class ModelUtil  {
      * 设置模型参数，并持久化
      * @param modelDO
      */
-    public static void setOptions(ModelDO modelDO){
+        public static void setOptions(ModelDO modelDO){
         OptionHandler optionHandler = (OptionHandler) deSerialization(modelDO.getId());
         try {
             optionHandler.setOptions(getOptions(modelDO));

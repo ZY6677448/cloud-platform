@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.functions.Logistic;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.meta.AdaBoostM1;
@@ -67,7 +68,7 @@ public enum ModelTypeEnum {
             case Bagging:classifier = new Bagging();break;
             case LOGIT_BOOST:classifier = new LogitBoost();break;
             case STACKING:classifier = new Stacking();break;
-            case LOGISTIC:classifier = new LogitBoost();break;
+            case LOGISTIC:classifier = new Logistic();break;
             case JRIP:classifier = new JRip();break;
             case ONE_R:classifier = new OneR();break;
             case PART:classifier = new PART();break;

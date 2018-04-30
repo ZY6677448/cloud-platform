@@ -21,7 +21,6 @@ public class ModelFactory {
      * 算法模型的可选参数
      */
     private static Map<String,List<ModelOptionDO>> optionsMap = Maps.newHashMap();
-    private static Map<String,String> classifierMap = Maps.newHashMap();
 
     static {
         //初始化模型的参数
@@ -39,6 +38,10 @@ public class ModelFactory {
         optionsMap.put(ModelTypeEnum.NAIVE_BAYES.toString(),Collections.unmodifiableList(getBAYES()));
         optionsMap.put(ModelTypeEnum.DECISION_STUMP.toString(),Collections.unmodifiableList(getDecisionStump()));
         optionsMap.put(ModelTypeEnum.ONE_R.toString(),Collections.unmodifiableList(getOneR()));
+
+    }
+    private static Map<String,String> getClassifierMap(){
+        Map<String,String> classifierMap = Maps.newHashMap();
         classifierMap.put("weka.classifiers.meta.AdaBoostM1","AdaBoostM1");
         classifierMap.put("weka.classifiers.meta.AdditiveRegression","AdditiveRegression");
         classifierMap.put("weka.classifiers.meta.AttributeSelectedClassifier","AttributeSelectedClassifier");
@@ -122,6 +125,7 @@ public class ModelFactory {
         classifierMap.put("weka.classifiers.functions.VotedPerceptron","VotedPerceptron");
         classifierMap.put("weka.classifiers.meta.WeightedInstancesHandlerWrapper","WeightedInstancesHandlerWrapper");
         classifierMap.put("weka.classifiers.rules.ZeroR","ZeroR");
+        return classifierMap;
     }
     /**
      * 根据模型名称和模型类型产生一个模型类，
@@ -176,11 +180,11 @@ public class ModelFactory {
         List<ModelOptionDO> list = Lists.newArrayList();
         ModelOptionDO modelOptionDO = new ModelOptionDO();
         modelOptionDO.setKey("-I");
-        modelOptionDO.setDesc("通过距离的倒数来衡量邻居");
+        modelOptionDO.setDesc("通过距离的倒数来衡量邻居(衡量邻居的方法不能两个全开)");
         modelOptionDO.setValueType(OptionTypeEnum.BOOLEAN);
         ModelOptionDO modelOptionDO7= new ModelOptionDO();
         modelOptionDO7.setKey("-F");
-        modelOptionDO7.setDesc("通过 1-距离 来衡量邻居");
+        modelOptionDO7.setDesc("通过 1-距离 来衡量邻居(衡量邻居的方法不能两个全开)");
         modelOptionDO7.setValueType(OptionTypeEnum.BOOLEAN);
         ModelOptionDO modelOptionDO8=new ModelOptionDO();
         modelOptionDO8.setKey("-K");
@@ -228,21 +232,22 @@ public class ModelFactory {
         modelOptionDO14.setKey("-O");
         modelOptionDO14.setDesc("树不折叠");
         modelOptionDO14.setValueType(OptionTypeEnum.BOOLEAN);
+        ModelOptionDO modelOptionDO17 = new ModelOptionDO();
+        modelOptionDO17.setKey("-R");
+        modelOptionDO17.setDesc("使用减少的错误修剪（使用未修剪的树 关闭时使用）");
+        modelOptionDO17.setValueType(OptionTypeEnum.BOOLEAN);
         ModelOptionDO modelOptionDO15 = new ModelOptionDO();
         modelOptionDO15.setKey("-C");
-        modelOptionDO15.setDesc("设置修剪的置信度阈值(默认 0.25)");
+        modelOptionDO15.setDesc("设置修剪的置信度阈值(默认 0.25)（使用未修剪的树 关闭时使用）");
         modelOptionDO15.setValueType(OptionTypeEnum.DOUBLE);
         ModelOptionDO modelOptionDO16 = new ModelOptionDO();
         modelOptionDO16.setKey("-M");
         modelOptionDO16.setDesc("设置每个叶子的最小实例数(默认 2)");
         modelOptionDO16.setValueType(OptionTypeEnum.INTEGER);
-        ModelOptionDO modelOptionDO17 = new ModelOptionDO();
-        modelOptionDO17.setKey("-R");
-        modelOptionDO17.setDesc("使用减少的错误修剪");
-        modelOptionDO17.setValueType(OptionTypeEnum.BOOLEAN);
+
         ModelOptionDO modelOptionDO18 = new ModelOptionDO();
         modelOptionDO18.setKey("-N");
-        modelOptionDO18.setDesc("树折叠次数（用于减少错误修剪）");
+        modelOptionDO18.setDesc("树折叠次数（用于减少错误修剪）（使用未修剪的树 关闭时使用）");
         modelOptionDO18.setValueType(OptionTypeEnum.INTEGER);
         ModelOptionDO modelOptionDO19 = new ModelOptionDO();
         modelOptionDO19.setKey("-B");
@@ -403,7 +408,7 @@ public class ModelFactory {
         modelOptionDO47.setKey("-W");
         modelOptionDO47.setDesc(" 基分类器(默认:DecisionStump)");
         modelOptionDO47.setValueType(OptionTypeEnum.ENUM);
-        modelOptionDO47.setExtension(classifierMap);
+        modelOptionDO47.setExtension(getClassifierMap());
         list.add(modelOptionDO42);
         list.add(modelOptionDO43);
         list.add(modelOptionDO44);
@@ -433,7 +438,7 @@ public class ModelFactory {
         modelOptionDO53.setKey("-W");
         modelOptionDO53.setDesc("基本分类器 (默认:REPTree）");
         modelOptionDO53.setValueType(OptionTypeEnum.ENUM);
-        modelOptionDO53.setExtension(classifierMap);
+        modelOptionDO53.setExtension(getClassifierMap());
         ModelOptionDO modelOptionDO54 = new ModelOptionDO();
         modelOptionDO54.setKey("-M");
         modelOptionDO54.setDesc(" 设置每个叶子的最小实例数（默认值为2）");
@@ -503,7 +508,7 @@ public class ModelFactory {
         modelOptionDO69.setKey("-W");
         modelOptionDO69.setDesc("基分类器(默认: DecisionStump)");
         modelOptionDO69.setValueType(OptionTypeEnum.ENUM);
-        modelOptionDO69.setExtension(classifierMap);
+        modelOptionDO69.setExtension(getClassifierMap());
         list.add(modelOptionDO60);
         list.add(modelOptionDO61);
         list.add(modelOptionDO62);
@@ -522,7 +527,7 @@ public class ModelFactory {
         modelOptionDO70.setKey("-M");
         modelOptionDO70.setDesc("元分类器(默认: ZeroR");
         modelOptionDO70.setValueType(OptionTypeEnum.ENUM);
-        modelOptionDO70.setExtension(classifierMap);
+        modelOptionDO70.setExtension(getClassifierMap());
         ModelOptionDO modelOptionDO71 = new ModelOptionDO();
         modelOptionDO71.setKey("-X");
         modelOptionDO71.setDesc("设置交叉验证折叠的数量");
@@ -535,7 +540,7 @@ public class ModelFactory {
         modelOptionDO73.setKey("-B");
         modelOptionDO73.setDesc("分类器,（默认：ZeroR）");
         modelOptionDO73.setValueType(OptionTypeEnum.ENUM);
-        modelOptionDO73.setExtension(classifierMap);
+        modelOptionDO73.setExtension(getClassifierMap());
         list.add(modelOptionDO71);
         list.add(modelOptionDO72);
         list.add(modelOptionDO70);
@@ -650,7 +655,7 @@ public class ModelFactory {
         List<ModelOptionDO> list = Lists.newArrayList();
         ModelOptionDO modelOptionDO= new ModelOptionDO();
         modelOptionDO.setKey("-K");
-        modelOptionDO.setDesc("*使用内核密度估计器");
+        modelOptionDO.setDesc("使用内核密度估计器");
         modelOptionDO.setValueType(OptionTypeEnum.BOOLEAN);
         ModelOptionDO modelOptionDO1= new ModelOptionDO();
         modelOptionDO1.setKey("-D");
@@ -674,7 +679,7 @@ public class ModelFactory {
         ModelOptionDO modelOptionDO1= new ModelOptionDO();
         modelOptionDO1.setKey("-num-decimal-places");
         modelOptionDO1.setDesc("模型中输出数字的小数位数。");
-        modelOptionDO1.setValueType(OptionTypeEnum.BOOLEAN);
+        modelOptionDO1.setValueType(OptionTypeEnum.INTEGER);
         ModelOptionDO modelOptionDO2 = new ModelOptionDO();
         modelOptionDO2.setKey("-batch-size");
         modelOptionDO2.setDesc("批量预测所需的批量大小。");

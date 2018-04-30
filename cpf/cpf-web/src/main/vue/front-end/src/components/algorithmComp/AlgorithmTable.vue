@@ -53,9 +53,17 @@ export default {
       aggreModelDialogData: {
         title: "",
         data: {}
-      },
-      usedScenes:[]
+      }
     };
+  },
+  computed:{
+    usedScenes(){
+        var usedScenes = [];
+        for(let data of this.tableData){
+          usedScenes.push(data.scene);
+        }
+        return usedScenes;
+    }
   },
   methods: {
     openDialog() {
@@ -90,10 +98,6 @@ export default {
     
       if (response.success) {
         this.tableData = response.result;
-        this.usedScenes = [];
-        for(let data of this.tableData){
-          this.usedScenes.push(data.scene);
-        }
       } else {
         this.$message("获取应用场景失败");
       }

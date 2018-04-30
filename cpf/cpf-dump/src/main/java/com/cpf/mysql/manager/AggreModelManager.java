@@ -33,6 +33,7 @@ public class AggreModelManager extends ServiceTemplate {
     @Autowired
     private TrainTask trainTask;
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    @Autowired
     private ModelHolder modelHolder;
 
     /**
@@ -81,7 +82,7 @@ public class AggreModelManager extends ServiceTemplate {
                 //持久化
                 ModelUtil.serialization(returnResult);
                 //异步操作 训练模型
-                executorService.submit(()->{ trainTask.train(returnResult); });
+                //executorService.submit(()->{ trainTask.train(returnResult); });
                 return new CallbackResult<Object>(returnResult,true);
             }
         });

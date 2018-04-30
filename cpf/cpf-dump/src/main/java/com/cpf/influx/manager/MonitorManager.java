@@ -8,6 +8,7 @@ import com.cpf.influx.manager.DO.MonitorDO;
 import com.cpf.service.CallbackResult;
 import com.cpf.service.ServiceExecuteTemplate;
 import com.cpf.service.ServiceTemplate;
+import com.cpf.utils.MonitorUtil;
 import com.cpf.utils.TimeStampUtil;
 import com.cpf.utils.ValidationUtil;
 import com.google.common.collect.Lists;
@@ -170,9 +171,14 @@ public class MonitorManager extends ServiceTemplate {
                 List<String> timeList = Lists.newLinkedList();
                 List<String> colList = Lists.newLinkedList();
                 if(resultMap.size() != 0 && resultMap.get(tableName) != null){
-                    for(MonitorDO monitorDO : resultMap.get(tableName)){
-                        timeList.add(TimeStampUtil.influxTime2Java(monitorDO.getData().get("time")));
-                        colList.add(monitorDO.getData().get(col));
+                    resultMap.get(tableName).forEach(monitorDO -> timeList.add(TimeStampUtil.influxTime2Java(monitorDO.getData().get("time"))));
+                    //判断是否需要转换一下单位
+                    if(MonitorUtil.isBytes(col)){
+                        resultMap.get(tableName).forEach(monitorDO -> colList.add(MonitorUtil.bytes2MB(monitorDO.getData().get(col))));
+
+                    }else {
+                        resultMap.get(tableName).forEach(monitorDO -> colList.add(monitorDO.getData().get(col)));
+
                     }
                 }
                 return new CallbackResult<>(Lists.newArrayList(timeList,colList),true);
