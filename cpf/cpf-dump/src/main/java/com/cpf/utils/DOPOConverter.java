@@ -25,6 +25,7 @@ public class DOPOConverter {
         modelPO.setName(modelDO.getName());
         modelPO.setWeight(modelDO.getWeight());
         modelPO.setConfig(modelOptionsDO2PO(modelDO.getConfig()));
+        modelPO.setCorrectRate(modelDO.getCorrectRate());
         return modelPO;
     }
     public static ModelDO modelPO2DO(ModelPO modelPO){
@@ -33,6 +34,7 @@ public class DOPOConverter {
         modelDO.setName(modelPO.getName());
         modelDO.setWeight(modelPO.getWeight());
         modelDO.setConfig(modelOptionsPO2DO(modelPO.getConfig()));
+        modelDO.setCorrectRate(modelPO.getCorrectRate());
         return modelDO;
     }
     public static List<ModelDO> modelPOs2DOs(List<ModelPO> modelPOList){
@@ -132,6 +134,7 @@ public class DOPOConverter {
         alarmPO.setData(JSON.toJSONString(alarmDO.getMonitorDO()));
         alarmPO.setRule(JSON.toJSONString(alarmDO.getRuleDO()));
         alarmPO.setTime(alarmDO.getTime());
+        alarmPO.setExpire(alarmDO.getExpire());
         return alarmPO;
     }
     public static AlarmDO alarmPO2DO(AlarmPO alarmPO){
@@ -140,7 +143,8 @@ public class DOPOConverter {
         alarmDO.setType(AlarmTypeEnum.valueOf(alarmPO.getType()));
         alarmDO.setTime(alarmPO.getTime());
         alarmDO.setMonitorDO(JSON.parseObject(alarmPO.getData(),new TypeReference<MonitorDO>(){}));
-        alarmDO.setRuleDO(JSON.parseObject(alarmPO.getData(),new TypeReference<RuleDO>(){}));
+        alarmDO.setRuleDO(JSON.parseObject(alarmPO.getRule(),new TypeReference<RuleDO>(){}));
+        alarmDO.setExpire(alarmPO.getExpire());
         return alarmDO;
     }
     public static List<AlarmDO> alarmPOS2DOS(List<AlarmPO> alarmPOList){

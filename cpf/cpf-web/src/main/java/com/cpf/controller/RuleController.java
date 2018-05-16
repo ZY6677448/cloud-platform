@@ -2,7 +2,7 @@ package com.cpf.controller;
 
 import com.cpf.mysql.manager.DO.RuleDO;
 import com.cpf.mysql.manager.RuleManager;
-import com.cpf.monitor.RuleHolder;
+import com.cpf.holder.RuleHolder;
 import com.cpf.service.CallbackResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,7 +25,7 @@ public class RuleController {
     private RuleHolder ruleHolder;
     /**
      * 添加或者修改实时监控规则
-     * @param rulePO
+     * @param ruleDO
      * @return
      */
     @RequestMapping(value = "/rule", method = RequestMethod.POST)
@@ -36,7 +36,7 @@ public class RuleController {
             //更新内存中的监控规则
             ruleHolder.refresh();
         }
-        return new ResponseEntity<Object>(result,HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
     /**
      * 获取所有监控规则
@@ -44,7 +44,7 @@ public class RuleController {
      */
     @RequestMapping(value = "/rules", method = RequestMethod.GET)
     ResponseEntity<Object> rules(){
-        return new ResponseEntity<Object>(ruleManager.all(),HttpStatus.OK);
+        return new ResponseEntity<>(ruleManager.all(), HttpStatus.OK);
     }
 
     /**
@@ -53,8 +53,8 @@ public class RuleController {
      * @return
      */
     @RequestMapping(value = "/rule", method = RequestMethod.DELETE)
-    ResponseEntity<Object> deleteRule(@RequestParam Long id){
-        return new ResponseEntity<Object>(ruleManager.delete(id),HttpStatus.OK);
+    ResponseEntity<Object> rule(@RequestParam Long id){
+        return new ResponseEntity<>(ruleManager.delete(id), HttpStatus.OK);
     }
 
 }

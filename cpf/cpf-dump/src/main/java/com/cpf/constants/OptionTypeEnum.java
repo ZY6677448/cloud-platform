@@ -17,7 +17,7 @@ public enum OptionTypeEnum {
      * 描述
      */
     private String desc;
-    private OptionTypeEnum(String type,String desc){
+    OptionTypeEnum(String type,String desc){
         this.type = type;
         this.desc = desc;
     }

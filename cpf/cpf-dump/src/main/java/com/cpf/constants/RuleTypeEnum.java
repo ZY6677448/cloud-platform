@@ -14,15 +14,15 @@ import java.util.Map;
  **/
 public enum  RuleTypeEnum {
 
-    CPU("win_cpu",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","instance","objectname","danger"}))),
-    DISK("win_disk",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","instance","objectname","danger"}))),
-    DISKIO("win_diskio",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","instance","objectname","danger"}))),
-    MEM("win_mem",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","objectname","danger"}))),
-    NET("win_net",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","instance","objectname","danger"}))),
-    PERF("win_perf_counters",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","instance","objectname","danger"}))),
-    SWAP("win_swap",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","instance","objectname","danger"}))),
-    SYSTEM("win_system",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","objectname","danger"}))),
-    SYSTEM_DAYS("win_system_days",Collections.unmodifiableList(Lists.newArrayList(new String[]{"host","danger"})))
+    CPU("win_cpu"),
+    DISK("win_disk"),
+    DISKIO("win_diskio"),
+    MEM("win_mem"),
+    NET("win_net"),
+    PERF("win_perf_counters"),
+    SWAP("win_swap"),
+    SYSTEM("win_system"),
+    SYSTEM_DAYS("win_system_days")
     ;
     /**
      * 监控规则类型，等于数据库表名
@@ -31,19 +31,22 @@ public enum  RuleTypeEnum {
     /**
      * 数据库表的tags
      */
-    private List<String> tagList;
-
-    private RuleTypeEnum(String type,List<String> tagList){
+    private static final List<String> MONITOR_DATA_TAG_LIST = Collections.unmodifiableList(Lists.newArrayList("host","instance","objectname"));
+    private static final List<String> TRAIN_DATA_TAG_LIST = Collections.unmodifiableList(Lists.newArrayList("host","instance","objectname","danger"));
+    RuleTypeEnum(String type){
         this.type = type;
-        this.tagList = tagList;
     }
 
     public String getType() {
         return type;
     }
 
-    public List<String> getTagList() {
-        return tagList;
+    public static List<String> getTagList(Boolean withDanger) {
+        if(withDanger){
+            return TRAIN_DATA_TAG_LIST;
+        }else {
+            return MONITOR_DATA_TAG_LIST;
+        }
     }
 
     /**

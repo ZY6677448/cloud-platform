@@ -8,7 +8,6 @@
   </div>
 </template>
 <script>
-import echarts from "echarts";
 import { getChartData } from "@/api/getData";
 import { formatDate } from "@/utils/date";
 

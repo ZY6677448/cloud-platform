@@ -15,7 +15,7 @@ import org.springframework.data.influxdb.InfluxDBProperties;
  **/
 @Configuration
 @EnableConfigurationProperties(InfluxDBProperties.class)
-public class InfluxDbConfig {
+public class InfluxConfig {
     @Bean
     public InfluxDBConnectionFactory connectionFactory(final InfluxDBProperties properties) {
 

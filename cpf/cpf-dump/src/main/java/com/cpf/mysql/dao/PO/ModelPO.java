@@ -24,4 +24,8 @@ public class ModelPO {
      */
     @OneToOne(cascade = CascadeType.ALL)
     private ModelOptionsPO config;
+    /**
+     * 模型正确率
+     */
+    private Double correctRate;
 }

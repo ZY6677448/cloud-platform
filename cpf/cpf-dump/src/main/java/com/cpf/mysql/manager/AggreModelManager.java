@@ -1,6 +1,6 @@
 package com.cpf.mysql.manager;
 
-import com.cpf.influx.holder.ModelHolder;
+import com.cpf.holder.ModelHolder;
 import com.cpf.mysql.dao.AggreModelDAO;
 import com.cpf.mysql.dao.PO.AggreModelPO;
 import com.cpf.mysql.manager.DO.AggreModelDO;
@@ -29,10 +29,10 @@ import java.util.concurrent.Executors;
 public class AggreModelManager extends ServiceTemplate {
     @Autowired
     private AggreModelDAO aggreModelDAO;
-    private static Logger logger = LoggerFactory.getLogger(AggreModelManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(AggreModelManager.class);
     @Autowired
     private TrainTask trainTask;
-    private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     @Autowired
     private ModelHolder modelHolder;
 
@@ -53,7 +53,7 @@ public class AggreModelManager extends ServiceTemplate {
             @Override
             public CallbackResult<Object> executeAction() {
                 AggreModelPO result = aggreModelDAO.save(DOPOConverter.aggreModelDO2PO(aggreModelDO));
-                return new CallbackResult<Object>(DOPOConverter.aggreModelPO2DO(result),true);
+                return new CallbackResult<>(DOPOConverter.aggreModelPO2DO(result), true);
             }
         });
         return (CallbackResult<AggreModelDO>)result;
@@ -82,8 +82,8 @@ public class AggreModelManager extends ServiceTemplate {
                 //持久化
                 ModelUtil.serialization(returnResult);
                 //异步操作 训练模型
-                //executorService.submit(()->{ trainTask.train(returnResult); });
-                return new CallbackResult<Object>(returnResult,true);
+                executorService.submit(()-> trainTask.train(returnResult));
+                return new CallbackResult<>(returnResult, true);
             }
         });
         return (CallbackResult<ModelDO>)result;
@@ -102,7 +102,7 @@ public class AggreModelManager extends ServiceTemplate {
             @Override
             public CallbackResult<Object> executeAction() {
                 List<AggreModelPO> result = aggreModelDAO.findAll();
-                return new CallbackResult<Object>(DOPOConverter.aggreModelPOS2DOS(result),true);
+                return new CallbackResult<>(DOPOConverter.aggreModelPOS2DOS(result), true);
             }
         });
         return (CallbackResult<List<AggreModelDO>>)result;
@@ -153,7 +153,7 @@ public class AggreModelManager extends ServiceTemplate {
             }
             @Override
             public CallbackResult<Object> executeAction() {
-                return new CallbackResult<Object>(DOPOConverter.aggreModelPO2DO(aggreModelDAO.getById(id)),true);
+                return new CallbackResult<>(DOPOConverter.aggreModelPO2DO(aggreModelDAO.getById(id)), true);
             }
         });
         return (CallbackResult<AggreModelDO>)result;
@@ -175,7 +175,7 @@ public class AggreModelManager extends ServiceTemplate {
             }
 
             @Override
-            public CallbackResult<Object> executeAction() throws Exception {
+            public CallbackResult<Object> executeAction() {
                 return new CallbackResult<>(DOPOConverter.aggreModelPO2DO(aggreModelDAO.findByModelsIsContaining(DOPOConverter.modelDO2PO(modelDO))),true);
             }
         });

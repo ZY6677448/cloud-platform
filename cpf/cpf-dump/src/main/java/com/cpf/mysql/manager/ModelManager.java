@@ -2,7 +2,7 @@ package com.cpf.mysql.manager;
 
 import com.cpf.constants.CpfDumpConstants;
 import com.cpf.exception.BusinessException;
-import com.cpf.influx.holder.ModelHolder;
+import com.cpf.holder.ModelHolder;
 import com.cpf.mysql.dao.ModelDAO;
 import com.cpf.mysql.dao.PO.ModelPO;
 import com.cpf.mysql.manager.DO.ModelDO;
@@ -35,7 +35,7 @@ public class ModelManager extends ServiceTemplate {
     @Autowired
     private ModelHolder modelHolder;
     private ExecutorService executorService = Executors.newFixedThreadPool(5);
-    private static Logger logger = LoggerFactory.getLogger(ModelManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(ModelManager.class);
 
 
     /**
@@ -50,7 +50,7 @@ public class ModelManager extends ServiceTemplate {
             }
             @Override
             public CallbackResult<Object> executeAction() {
-                return new CallbackResult<Object>(DOPOConverter.modelPOs2DOs(modelDAO.findAll()),true);
+                return new CallbackResult<>(DOPOConverter.modelPOs2DOs(modelDAO.findAll()), true);
             }
         });
         return (CallbackResult<List<ModelDO>>)result;
@@ -58,10 +58,11 @@ public class ModelManager extends ServiceTemplate {
 
     /**
      * 修改模型
-     * @param modelDO
+     * @param modelDO 算法模型参数
+     * @param train 是否需要训练模型
      * @return
      */
-    public CallbackResult<ModelDO> modifyModel(ModelDO modelDO){
+    public CallbackResult<ModelDO> modifyModel(ModelDO modelDO,Boolean train){
         Object  result = execute(logger, "modifyModel", new ServiceExecuteTemplate() {
             @Override
             public CallbackResult<Object> checkParams() {
@@ -79,8 +80,10 @@ public class ModelManager extends ServiceTemplate {
                 ModelPO modelPO = modelDAO.save(DOPOConverter.modelDO2PO(modelDO));
                 ModelUtil.setOptions(modelDO);
                 //异步进行模型训练
-               // executorService.submit(()->trainTask.train(modelDO));
-                return new CallbackResult<Object>(DOPOConverter.modelPO2DO(modelPO),true);
+                if(train){
+                    executorService.submit(()->trainTask.train(modelDO));
+                }
+                return new CallbackResult<>(DOPOConverter.modelPO2DO(modelPO), true);
             }
         });
         return (CallbackResult<ModelDO>)result;

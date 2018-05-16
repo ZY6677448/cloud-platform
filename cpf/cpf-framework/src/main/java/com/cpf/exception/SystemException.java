@@ -7,6 +7,7 @@ import com.cpf.constants.ErrorDesc;
  * @desc 系统异常
  **/
 public class SystemException extends RuntimeException{
+    private static final long serialVersionUID = 9180993166174148744L;
     private String errorCode;
     public SystemException(ErrorDesc errorDesc){
         super(errorDesc.getErrorMSG());

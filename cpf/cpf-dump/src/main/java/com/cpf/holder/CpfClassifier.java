@@ -1,4 +1,4 @@
-package com.cpf.influx.holder;
+package com.cpf.holder;
 
 import lombok.Data;
 import weka.classifiers.Classifier;

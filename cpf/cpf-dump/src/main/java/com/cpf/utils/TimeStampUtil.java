@@ -12,7 +12,7 @@ public class TimeStampUtil {
     /**
      * java时间戳和influx时间戳相差倍数
      */
-    public static Long MULTIPLE = 1000000L;
+    private static final Long MULTIPLE = 1000000L;
 
     /**
      * java时间戳转influx时间戳
@@ -43,11 +43,5 @@ public class TimeStampUtil {
      */
     public static Long minutes2Time(Long minutes){
         return minutes*60*1000;
-    }
-    public static void main(String[] args){
-     Double a = new Double("1.50675336E12");
-     Double b = NumberUtils.toDouble("1.50675336E12");
-     DecimalFormat df = new DecimalFormat("0");
-     System.out.println(df.format(a));
     }
 }

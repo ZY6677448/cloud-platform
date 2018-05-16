@@ -8,6 +8,7 @@ import com.cpf.constants.ErrorDesc;
  * @desc 业务异常
  **/
 public class BusinessException  extends RuntimeException {
+    private static final long serialVersionUID = 7684001206224294825L;
     private String errorCode;
     public BusinessException(ErrorDesc errorDesc){
         super(errorDesc.getErrorMSG());

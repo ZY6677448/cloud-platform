@@ -7,12 +7,16 @@
        <el-breadcrumb-item>设备监控</el-breadcrumb-item> 
       </el-breadcrumb> 
    </el-row>
-   <el-row type="flex">
-    <search></search>
+   <el-row >
+     <el-col :span="5">
+       <el-input v-model="ipaddr" placeholder="请输入IP地址">
+                 <el-button slot="append" icon="el-icon-search" @click="initTableData"></el-button>
+       </el-input>
+     </el-col>
    </el-row>
    <el-row>
             <el-table
-      :data="tableData"
+       :data="tableData"
       style="width: 100%">
       <el-table-column
         align='left'
@@ -30,7 +34,7 @@
       align='left'
         prop="ipaddr"
         label="ip"
-        width="120">
+        width="300">
       </el-table-column>
       <el-table-column
       align='left'
@@ -49,6 +53,18 @@
     </el-table-column>
     </el-table>
    </el-row>
+   <el-row>
+         <el-pagination  
+         background
+    layout="total,prev, pager, next,sizes"
+    :page-size="pagesize"
+    :page-sizes="[10, 20, 50, 100]"
+    :current-page="currentPage"
+    @current-change="handleCurrentChange"
+    @size-change="handleSizeChange"
+    :total="total">
+  </el-pagination>
+   </el-row>
  </div>
 </template>
 <script>
@@ -59,20 +75,35 @@ export default {
   name: "monitorTable",
   data() {
     return {
-      tableData: []
+      tableData: [],
+      total:0,
+      currentPage:0,
+      pagesize:10,
+      ipaddr:'',
+      allData:[]
     };
   },
   methods: {
     async initTableData() {
-      const response = await getAssets();
+      let params = {"page":this.currentPage-1,"size":this.pagesize,"ipaddr":this.ipaddr};
+      const response = await getAssets(params);
       if (response.success) {
-        this.tableData = response.result;
+        this.total = response.result.totalElements;
+        this.tableData =  response.result.content;
       } else {
         this.$message("获取监控数据失败");
       }
     },
     detail(row) {
       this.$router.push("/Monitor/" + row.hostname);
+    },
+    handleSizeChange(size){
+       this.pagesize = size;
+       this.initTableData();
+    },
+    handleCurrentChange(currentPage){
+       this.currentPage = currentPage;
+       this.initTableData();
     }
   },
   created() {
@@ -83,7 +114,7 @@ export default {
   }
 };
 </script>
-<style>
+<style scoped>
 .el-row {
   margin-bottom: 20px;
 }

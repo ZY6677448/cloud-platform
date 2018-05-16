@@ -9,8 +9,8 @@ import com.google.common.base.Joiner;
  * @desc 日志格式
  **/
 public class LoggerFormat {
-    public static final String FIRST_SPLIT = "|";
-    public static final String SECOND_SPLIT = ",";
+    private static final String FIRST_SPLIT = "|";
+    private static final String SECOND_SPLIT = ",";
     public static String format(String business,String[] params,String result,String desc){
         if(params == null){
             params = new String[]{"null"};
@@ -18,10 +18,6 @@ public class LoggerFormat {
         return Joiner.on(FIRST_SPLIT).useForNull("null").join(business,
                 Joiner.on(SECOND_SPLIT).useForNull("null").join(params),result,desc);
 
-    }
-    public static void main(String[] args){
-        String[] a = new String[]{"asd",null,"asd"};
-        System.out.print(LoggerFormat.format("console",null,"success",null));
     }
 }
 

@@ -6,9 +6,12 @@ import com.cpf.ml.MlEngine;
 import com.cpf.monitor.MonitorEngine;
 import com.cpf.mysql.manager.AssetManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,17 +42,10 @@ public class MonitorController {
      * @param monitorDO
      * @return
      */
-    @RequestMapping(method = RequestMethod.GET)
-    ResponseEntity<Object> monitor(MonitorDO monitorDO){
+    @RequestMapping(method = RequestMethod.POST)
+    ResponseEntity<Object> monitor(@RequestBody MonitorDO monitorDO){
         //异步执行
-        executorService.submit(()->{
-            //判断是否命中监控规则
-            Boolean monitorResult = monitorEngine.monitor(monitorDO);
-            //没有命中监控规则，则预测是否存在潜在危险，命中则已经危险，无需预测
-            if(!monitorResult){
-                mlEngine.predict(monitorDO);
-            }
-        });
+        executorService.submit(()->monitorEngine.monitor(monitorDO));
         return new ResponseEntity<>(true,HttpStatus.OK);
     }
 
@@ -77,19 +73,19 @@ public class MonitorController {
      * @return
      */
     @RequestMapping(value = "/chartdata", method = RequestMethod.GET)
-    ResponseEntity<Object> chartdata(String host,String table,String col,
-                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
-                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")Date endTime){
+    ResponseEntity<Object> chartData(String host, String table, String col,
+                                     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
+                                     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")Date endTime){
         return new ResponseEntity<>(monitorManager.queryChartDataByTime(host,table,col,startTime,endTime),HttpStatus.OK);
     }
 
     /**
-     * 获取所有资产信息
+     * 根据ip地址模糊分页查询资产信息
      * @return
      */
     @RequestMapping(value = "/assets", method = RequestMethod.GET)
-    ResponseEntity<Object> assets(){
-        return new ResponseEntity<>(assetManager.all(),HttpStatus.OK);
+    ResponseEntity<Object> assets(@PageableDefault() Pageable pageable,String ipaddr){
+        return new ResponseEntity<>(assetManager.findByIP(pageable,ipaddr),HttpStatus.OK);
     }
 
 }

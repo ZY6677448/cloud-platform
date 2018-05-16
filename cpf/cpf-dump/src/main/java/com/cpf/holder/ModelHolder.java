@@ -1,4 +1,4 @@
-package com.cpf.influx.holder;
+package com.cpf.holder;
 
 import com.alibaba.fastjson.JSON;
 import com.cpf.logger.BusinessLogger;
@@ -7,6 +7,7 @@ import com.cpf.mysql.manager.DO.AggreModelDO;
 import com.cpf.mysql.manager.DO.ModelDO;
 import com.cpf.mysql.manager.ModelManager;
 import com.cpf.service.CallbackResult;
+import com.cpf.task.TrainTask;
 import com.cpf.utils.ModelUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -32,7 +33,14 @@ public class ModelHolder {
     private AggreModelManager aggreModelManager;
     @Autowired
     private ModelManager modelManager;
-    private static Logger logger = LoggerFactory.getLogger(ModelHolder.class);
+    @Autowired
+    private TrainTask trainTask;
+    /**
+     * 让modelUtil提前加载配置
+     */
+    @Autowired
+    private ModelUtil modelUtil;
+    private static final Logger logger = LoggerFactory.getLogger(ModelHolder.class);
 
     private Map<String,List<CpfClassifier>> classifiesMap = Maps.newConcurrentMap();
 
@@ -59,18 +67,21 @@ public class ModelHolder {
      * 读取指定场景的算法模型，替换掉现有的模型
      * @param aggreModelDO
      */
-    public void refresh(AggreModelDO aggreModelDO){
+    private void refresh(AggreModelDO aggreModelDO){
         List<CpfClassifier> classifierList = Lists.newArrayList();
         for(ModelDO modelDO : aggreModelDO.getModels()){
+            CpfClassifier cpfClassifier = new CpfClassifier();
+            cpfClassifier.setWeight(modelDO.getWeight());
+            cpfClassifier.setId(modelDO.getId());
             try {
-                CpfClassifier cpfClassifier = new CpfClassifier();
-                cpfClassifier.setWeight(modelDO.getWeight());
-                cpfClassifier.setId(modelDO.getId());
                 cpfClassifier.setClassifier((Classifier)ModelUtil.deSerialization(modelDO.getId()));
-                classifierList.add(cpfClassifier);
             } catch (Exception e) {
-                BusinessLogger.errorLog("ModelHolder.refresh",new String[]{JSON.toJSONString(modelDO),JSON.toJSONString(e)},"MODELS_DESERIALIZATION","算法模型反序列化失败",logger);
+                //反序列化异常，重新持久化并训练一个算法模型
+                ModelUtil.serialization(modelDO);
+                trainTask.train(modelDO);
+                cpfClassifier.setClassifier((Classifier)ModelUtil.deSerialization(modelDO.getId()));
             }
+            classifierList.add(cpfClassifier);
         }
         classifiesMap.put(aggreModelDO.getScene(),classifierList);
     }
@@ -128,9 +139,7 @@ public class ModelHolder {
         }
     }
     public List<CpfClassifier> getClassifiers(String scene){
-        if(classifiesMap.get(scene) == null){
-            classifiesMap.put(scene,Lists.newArrayList());
-        }
+        classifiesMap.computeIfAbsent(scene, k -> Lists.newArrayList());
         return classifiesMap.get(scene);
     }
 }

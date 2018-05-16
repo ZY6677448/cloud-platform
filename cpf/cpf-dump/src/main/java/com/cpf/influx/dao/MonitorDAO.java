@@ -2,7 +2,6 @@ package com.cpf.influx.dao;
 
 import com.cpf.constants.RuleTypeEnum;
 import com.cpf.utils.InfluxSqlGenerator;
-import com.google.common.collect.Lists;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
@@ -34,10 +33,9 @@ public class MonitorDAO {
      * @return
      */
     public QueryResult queryAVGByTime(Map<String,String> tags,String tableName,Long startTime,Long endTime){
-        String SQL =  InfluxSqlGenerator.meanDataSQL(tags,tableName,startTime,endTime);
+        String SQL =  InfluxSqlGenerator.meanDataSql(tags,tableName,startTime,endTime);
         Query query = new Query(SQL, template.getDatabase());
-        QueryResult result = template.query(query, TimeUnit.MILLISECONDS);
-        return result;
+        return template.query(query, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -48,14 +46,26 @@ public class MonitorDAO {
      * @return
      */
     public QueryResult queryAllAVGByTime(Map<String,String> tags,Long startTime,Long endTime){
-        StringBuffer sqls = new StringBuffer();
-        List<RuleTypeEnum> ruleTypeEnumList = Lists.newArrayList(RuleTypeEnum.values());
+        StringBuilder sqls = new StringBuilder();
         for(RuleTypeEnum ruleTypeEnum : RuleTypeEnum.values()){
-            sqls.append(InfluxSqlGenerator.meanDataSQL(tags,ruleTypeEnum.getType(),startTime,endTime));
+            sqls.append(InfluxSqlGenerator.meanDataSql(tags,ruleTypeEnum.getType(),startTime,endTime));
         }
         Query query = new Query(sqls.toString(), template.getDatabase());
-        QueryResult result = template.query(query, TimeUnit.MILLISECONDS);
-        return result;
+        return template.query(query, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 查询指定条件的所有数据表最新一条数据
+     * @param tags
+     * @return
+     */
+    public QueryResult queryRecentAllData(Map<String,String> tags){
+        StringBuilder sqls = new StringBuilder();
+        for(RuleTypeEnum ruleTypeEnum : RuleTypeEnum.values()){
+            sqls.append(InfluxSqlGenerator.recentDataSql(ruleTypeEnum.getType(),tags));
+        }
+        Query query = new Query(sqls.toString(), template.getDatabase());
+        return template.query(query, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -68,10 +78,13 @@ public class MonitorDAO {
      */
     public QueryResult queryAVGGroupByTime(Map<String,String> tags, List<String> meanList, Long startTime, Long endTime, RuleTypeEnum ruleTypeEnum){
         Query query = new Query(InfluxSqlGenerator.meanDatasSql(tags,meanList,ruleTypeEnum.getType(),startTime,endTime),template.getDatabase());
-        QueryResult result = template.query(query, TimeUnit.MILLISECONDS);
-        return result;
+        return template.query(query, TimeUnit.MILLISECONDS);
     }
 
+    public QueryResult queryChangeRateByTime(String tableName,List<String> keys,String unit,Map<String,String> tagMap){
+        Query query = new Query(InfluxSqlGenerator.changeRateSql(tableName,null,unit,tagMap),template.getDatabase());
+        return template.query(query, TimeUnit.MILLISECONDS);
+    }
     /**
      * select * from tableNanem where time > startTime and time < endTime limit
      * @param tableName
@@ -81,9 +94,8 @@ public class MonitorDAO {
      * @return
      */
     public QueryResult queryDataByTime(String tableName,Map<String,String> tagMap,Long startTime,Long endTime,Long limit){
-        Query query = new Query(InfluxSqlGenerator.dataSQL(tableName,tagMap,startTime,endTime,limit),template.getDatabase());
-        QueryResult result = template.query(query, TimeUnit.MILLISECONDS);
-        return result;
+        Query query = new Query(InfluxSqlGenerator.dataSql(tableName,tagMap,startTime,endTime,limit),template.getDatabase());
+        return template.query(query, TimeUnit.MILLISECONDS);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.cpf.monitor;
+package com.cpf.holder;
 
 import com.alibaba.fastjson.JSON;
 import com.cpf.mysql.manager.DO.RuleDO;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class RuleHolder {
     @Autowired
     private RuleManager ruleManager;
-    private static Logger logger = LoggerFactory.getLogger(RuleHolder.class);
+    private static final Logger logger = LoggerFactory.getLogger(RuleHolder.class);
     private  Map<String,List<RuleDO>> ruleMap = Maps.newHashMap();
     /**
      * 从数据库获取所有监控规则,替代现有规则,类初始化后会自动调用一次
@@ -35,9 +35,7 @@ public class RuleHolder {
         if(result.getSuccess()){
             Map<String,List<RuleDO>> tempMap = Maps.newHashMap();
             for(RuleDO ruleDO : result.getResult()){
-                if(tempMap.get(ruleDO.getType()) == null){
-                    tempMap.put(ruleDO.getType(),Lists.newArrayList());
-                }
+                tempMap.computeIfAbsent(ruleDO.getType(), k -> Lists.newArrayList());
                 tempMap.get(ruleDO.getType()).add(ruleDO);
             }
             ruleMap = tempMap;
@@ -53,9 +51,7 @@ public class RuleHolder {
      * @return
      */
     public List<RuleDO> getRules(String type){
-        if(ruleMap.get(type) == null){
-            ruleMap.put(type,Lists.newArrayList());
-        }
+        ruleMap.computeIfAbsent(type, k -> Lists.newArrayList());
         return ruleMap.get(type);
     }
 }

@@ -15,7 +15,7 @@ public class ComparatorMap {
     /**
      * 预期数据是否大于规则数据的double类型比较器
      */
-    private static MonitorComparator MAX_DOUBLE = ( monitorValue, ruleValue)->{
+    private static final MonitorComparator MAX_DOUBLE = ( monitorValue, ruleValue)->{
         //为空代表条件不限制
         if(StringUtils.isBlank(ruleValue) || StringUtils.isBlank(monitorValue)){
             return true;
@@ -26,7 +26,7 @@ public class ComparatorMap {
     /**
      * 预期数据是否小于规则数据的double类型比较器
      */
-    private static MonitorComparator MIN_DOUBLE = ( monitorValue, ruleValue)->{
+    private static final MonitorComparator MIN_DOUBLE = ( monitorValue, ruleValue)->{
         //为空代表条件不限制
         if(StringUtils.isBlank(ruleValue) || StringUtils.isBlank(monitorValue)){
             return true;
@@ -37,7 +37,7 @@ public class ComparatorMap {
     /**
      * 预期数据是否大于规则数据的long类型比较器
      */
-    private static MonitorComparator MAX_LONG = ( monitorValue, ruleValue)->{
+    private static final MonitorComparator MAX_LONG = ( monitorValue, ruleValue)->{
         //为空代表条件不限制
         if(StringUtils.isBlank(ruleValue) || StringUtils.isBlank(monitorValue)){
             return true;
@@ -48,7 +48,7 @@ public class ComparatorMap {
     /**
      * 预期数据是否小于规则数据的long类型比较器
      */
-    private static MonitorComparator MIN_LONG = ( monitorValue, ruleValue)->{
+    private static final MonitorComparator MIN_LONG = ( monitorValue, ruleValue)->{
         //为空代表条件不限制
         if(StringUtils.isBlank(ruleValue) || StringUtils.isBlank(monitorValue)){
             return true;
@@ -56,20 +56,24 @@ public class ComparatorMap {
             return NumberUtils.toLong(monitorValue) <= NumberUtils.toLong(ruleValue);
         }
     };
+    private static final MonitorComparator EQUAL_STRING = ( monitorValue, ruleValue)->{
+        //为空代表条件不限制
+        if(StringUtils.isBlank(ruleValue) || StringUtils.isBlank(monitorValue)){
+            return true;
+        }else {
+            return monitorValue.equals(ruleValue);
+        }
+    };
     static{
+        map.put("host",EQUAL_STRING);
         //win_cpu rule params comparator
         map.put("Percent_DPC_Time",MAX_DOUBLE);
-        map.put("Percent_Idle_Time",MAX_DOUBLE);
         map.put("Percent_Interrupt_Time",MAX_DOUBLE);
         map.put("Percent_Privileged_Time",MAX_DOUBLE);
         map.put("Percent_Processor_Time",MAX_DOUBLE);
         map.put("Percent_User_Time",MAX_DOUBLE);
         //win_disk rule params comparator
-        map.put("Current_Disk_Queue_Length",MAX_LONG);
         map.put("Free_Megabytes",MIN_LONG);
-        map.put("Percent_Disk_Read_Time",MAX_DOUBLE);
-        map.put("Percent_Disk_Time",MAX_DOUBLE);
-        map.put("Percent_Disk_Write_Time",MAX_DOUBLE);
         map.put("Percent_Free_Space",MIN_DOUBLE);
         map.put("Percent_Idle_Time",MAX_DOUBLE);
         //win_disk_io rule params comparator

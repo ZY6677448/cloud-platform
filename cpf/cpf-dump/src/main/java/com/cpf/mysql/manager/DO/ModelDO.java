@@ -20,4 +20,8 @@ public class ModelDO {
      */
     @OneToOne
     private ModelOptionsDO config;
+    /**
+     * 模型正确率
+     */
+    private Double correctRate;
 }

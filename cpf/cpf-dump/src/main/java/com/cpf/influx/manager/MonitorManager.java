@@ -1,7 +1,10 @@
 package com.cpf.influx.manager;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.cpf.constants.CpfDumpConstants;
 import com.cpf.constants.RuleTypeEnum;
+import com.cpf.constants.TimeIntervalEnum;
 import com.cpf.exception.BusinessException;
 import com.cpf.influx.dao.MonitorDAO;
 import com.cpf.influx.manager.DO.MonitorDO;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jieping
@@ -34,38 +38,59 @@ import java.util.Map;
 public class MonitorManager extends ServiceTemplate {
     @Autowired
     private MonitorDAO monitorDAO;
-    private static Logger logger = LoggerFactory.getLogger(MonitorManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(MonitorManager.class);
+    /**
+     * 训练数据表名的后缀
+     */
+    private static final String TRAIN_SUFFIX ="_train";
+    /**
+     * 监控数据变化率的时间间隔
+     */
+    private static final String UNIT = TimeIntervalEnum.generateInterval(TimeIntervalEnum.HOUR,1L);
+
     /**
      * 查询过去一段时间的数据平均值
-     * monitorEngine专用，不对外，所以不用执行ServiceTemplate
      * @param monitorDO
      * @param minutes
      * @return
      */
-    public MonitorDO queryAVGByTime(MonitorDO monitorDO, Long minutes){
-        if(ValidationUtil.isNull(minutes)){
-            return monitorDO;
-        }
-        Map<String,String> tagMap = Maps.newHashMap();
-        RuleTypeEnum ruleType = RuleTypeEnum.typeOf(monitorDO.getType());
-        if(ruleType == null){
-            //找不到监控类型
-            throw new BusinessException(CpfDumpConstants.MONITOR_DATA_TYPE_ERROR);
-        }
-        //组装表的标签
-        for(String tag : ruleType.getTagList()){
-            tagMap.put(tag,monitorDO.getData().get(tag));
-        }
-        Long endTime = System.currentTimeMillis();
-        Long startTime = endTime - TimeStampUtil.minutes2Time(minutes);
-        QueryResult result = monitorDAO.queryAVGByTime(tagMap,monitorDO.getType(),startTime,endTime);
-        //查询结果解析成domain对象
-        List<MonitorDO> monitorDOList = parseQueryResult(result).get(monitorDO.getType());
-        if(CollectionUtils.isNotEmpty(monitorDOList) && monitorDOList.size() == 1){
-            return monitorDOList.get(0);
-        }else {
-            throw new BusinessException(CpfDumpConstants.QUERY_AVG_DATA_FAILED);
-        }
+    public CallbackResult<MonitorDO> queryAVGByTime(MonitorDO monitorDO, Long minutes){
+        Object result = execute(logger, "queryAVGByTime", new ServiceExecuteTemplate() {
+            @Override
+            public CallbackResult<Object> checkParams() {
+                return CallbackResult.success();
+            }
+
+            @Override
+            public CallbackResult<Object> executeAction() {
+
+                if(ValidationUtil.isNull(minutes)){
+                    return new CallbackResult<>(monitorDO,true);
+                }
+                Map<String,String> tagMap = Maps.newHashMap();
+                RuleTypeEnum ruleType = RuleTypeEnum.typeOf(monitorDO.getType());
+                if(ruleType == null){
+                    //找不到监控类型
+                    throw new BusinessException(CpfDumpConstants.MONITOR_DATA_TYPE_ERROR);
+                }
+                //组装表的标签
+                for(String tag : RuleTypeEnum.getTagList(false)){
+                    tagMap.put(tag,monitorDO.getData().get(tag));
+                }
+                Long endTime = System.currentTimeMillis();
+                Long startTime = endTime - TimeStampUtil.minutes2Time(minutes);
+                QueryResult result = monitorDAO.queryAVGByTime(tagMap,monitorDO.getType(),startTime,endTime);
+                //查询结果解析成domain对象
+                List<MonitorDO> monitorDOList = parseQueryResult(result).get(monitorDO.getType());
+                if(CollectionUtils.isNotEmpty(monitorDOList) && monitorDOList.size() == 1){
+                    return new CallbackResult<>(monitorDOList.get(0),true);
+                }else {
+                    throw new BusinessException(CpfDumpConstants.QUERY_AVG_DATA_FAILED);
+                }
+            }
+        });
+        return (CallbackResult<MonitorDO>)result;
+
     }
 
     /**
@@ -84,7 +109,6 @@ public class MonitorManager extends ServiceTemplate {
                  }
                  return CallbackResult.failure();
             }
-
             @Override
             public CallbackResult<Object> executeAction() {
                 Map<String,String> tagMap = Maps.newHashMap();
@@ -103,6 +127,30 @@ public class MonitorManager extends ServiceTemplate {
         return ( CallbackResult<List<MonitorDO>>)result;
     }
 
+    public CallbackResult<List<MonitorDO>> queryRecentAllData(String hostName){
+        Object result = execute(logger, "queryRecentAllData", new ServiceExecuteTemplate() {
+            @Override
+            public CallbackResult<Object> checkParams() {
+                if(ValidationUtil.isNotNull(hostName)){
+                    return CallbackResult.success();
+                }
+                return CallbackResult.failure();
+            }
+            @Override
+            public CallbackResult<Object> executeAction() {
+                Map<String,String> tagMap = Maps.newHashMap();
+                tagMap.put("host",hostName);
+                QueryResult result = monitorDAO.queryRecentAllData(tagMap);
+                Map<String,List<MonitorDO>> resultMap =  parseQueryResult(result);
+                List<MonitorDO> resultList = Lists.newLinkedList();
+                for(List<MonitorDO> monitorDOList : resultMap.values()){
+                    resultList.addAll(monitorDOList);
+                }
+                return new CallbackResult<>(resultList,true);
+            }
+        });
+        return ( CallbackResult<List<MonitorDO>>)result;
+    }
     /**
      * 根据时间，查询指定表的所有数据
      * @param tableName 表名
@@ -139,6 +187,18 @@ public class MonitorManager extends ServiceTemplate {
         return ( CallbackResult<List<MonitorDO>>)result;
     }
 
+    /**
+     * 查询训练数据表
+     * @param tableName
+     * @param tagMap
+     * @param startTime
+     * @param endTime
+     * @param limit
+     * @return
+     */
+    public CallbackResult<List<MonitorDO>> queryTrainSample(String tableName,Map<String,String> tagMap,Date startTime,Date endTime,Long limit){
+        return queryDataByTime(tableName+TRAIN_SUFFIX,tagMap,startTime,endTime,limit);
+    }
     /**
      * 查询绘制图表所需数据
      * @param hostName 主机名
@@ -188,11 +248,81 @@ public class MonitorManager extends ServiceTemplate {
     }
 
     /**
+     * 查询数据的变化率
+     * @param monitorDO
+     * @param unit 时间间隔
+     * @return 在原有数据monitorDO 的datamap上增加各个key的变化率
+     */
+    public CallbackResult<MonitorDO> queryChangeRateByTime(MonitorDO monitorDO, String unit){
+        Object result = execute(logger, "queryChangeRateByTime", new ServiceExecuteTemplate() {
+            @Override
+            public CallbackResult<Object> checkParams() {
+                if(ValidationUtil.isNotNull(monitorDO,unit)){
+                    return CallbackResult.success();
+                }
+                return CallbackResult.failure();
+            }
+
+            @Override
+            public CallbackResult<Object> executeAction() {
+                Map<String,String> tagMap = Maps.newHashMap();
+                RuleTypeEnum.getTagList(false).forEach(key->{
+                    if(ValidationUtil.isNotNull(monitorDO.getData().get(key))){
+                        tagMap.put(key,monitorDO.getData().get(key));
+                    }
+                });
+                String unit = TimeIntervalEnum.generateInterval(TimeIntervalEnum.HOUR,1L);
+                QueryResult result = monitorDAO.queryChangeRateByTime(monitorDO.getType(),null,unit,tagMap);
+                //查询结果解析成domain对象
+                List<MonitorDO> monitorDOList = parseQueryResult(result).get(monitorDO.getType());
+                if(CollectionUtils.isNotEmpty(monitorDOList) && monitorDOList.size() == 1){
+                    //深复制对象
+                    MonitorDO changeRateData = JSON.parseObject(JSON.toJSONString(monitorDO),new TypeReference<MonitorDO>(){});
+                    changeRateData.getData().putAll(monitorDOList.get(0).getData());
+                    return new CallbackResult<>(changeRateData,true);
+                }else {
+                    throw new BusinessException(CpfDumpConstants.QUERY_AVG_DATA_FAILED);
+                }
+            }
+        });
+        return (CallbackResult<MonitorDO>)result;
+    }
+
+    /**
+     * 添加训练样本
+     * @param monitorDO
+     */
+    public void addTrainSample(MonitorDO monitorDO){
+        execute(logger, "addTrainSample", new ServiceExecuteTemplate() {
+            @Override
+            public CallbackResult<Object> checkParams() {
+                if(ValidationUtil.isNotNull(monitorDO)){
+                    return CallbackResult.success();
+                }
+                return CallbackResult.failure();
+            }
+
+            @Override
+            public CallbackResult<Object> executeAction() {
+                CallbackResult<MonitorDO> queryResult = queryChangeRateByTime(monitorDO, UNIT);
+                if(queryResult.getSuccess()){
+                    MonitorDO sample = queryResult.getResult();
+                    //将数据类型改成训练数据类型
+                    sample.setType(sample.getType()+TRAIN_SUFFIX);
+                    //将训练数据存入数据库
+                    addMonitor(sample);
+                }
+                return CallbackResult.success();
+            }
+        });
+    }
+
+    /**
      * 插入监控数据
      * @param monitorDO
      * @return
      */
-    public CallbackResult<Object> addMonitor(MonitorDO monitorDO){
+    public void addMonitor(MonitorDO monitorDO){
         Object result = execute(logger, "addMonitor", new ServiceExecuteTemplate() {
             @Override
             public CallbackResult<Object> checkParams() {
@@ -209,20 +339,18 @@ public class MonitorManager extends ServiceTemplate {
                 return CallbackResult.success();
             }
         });
-        return (CallbackResult<Object>)result;
     }
 
-    //TODO 改成private
 
     /**
      * 将监控对象转换成influxdb接受的对象
      * @param monitorDO
      * @return
      */
-    public Point convert2Point(MonitorDO monitorDO){
+    private Point convert2Point(MonitorDO monitorDO){
         Map<String,Object> fieldMap = Maps.newHashMap();
         Map<String,String> tagMap = Maps.newHashMap();
-        List<String> tagList = RuleTypeEnum.typeOf(monitorDO.getType()).getTagList();
+        List<String> tagList = RuleTypeEnum.getTagList(true);
         for(Map.Entry<String,String> entry : monitorDO.getData().entrySet()){
             if(tagList.contains(entry.getKey())){
                 tagMap.put(entry.getKey(),entry.getValue());
@@ -230,7 +358,7 @@ public class MonitorManager extends ServiceTemplate {
                 fieldMap.put(entry.getKey(),new Double(entry.getValue()));
             }
         }
-        return  Point.measurement(monitorDO.getType()).tag(tagMap).fields(fieldMap).build();
+        return  Point.measurement(monitorDO.getType()).tag(tagMap).fields(fieldMap).time(System.currentTimeMillis(),TimeUnit.MILLISECONDS).build();
     }
 
     /**
@@ -238,7 +366,7 @@ public class MonitorManager extends ServiceTemplate {
      * @param result
      * @return
      */
-    public Map<String,List<MonitorDO>> parseQueryResult(QueryResult result){
+    private Map<String,List<MonitorDO>> parseQueryResult(QueryResult result){
         Map<String,List<MonitorDO>> resultMap = Maps.newHashMap();
         //一个Result代表一个表的查询结果
         for(QueryResult.Result r : result.getResults()){
@@ -281,5 +409,4 @@ public class MonitorManager extends ServiceTemplate {
         }
         return list;
     }
-
 }

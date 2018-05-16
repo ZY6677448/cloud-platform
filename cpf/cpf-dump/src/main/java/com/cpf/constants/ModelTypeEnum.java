@@ -45,8 +45,8 @@ public enum ModelTypeEnum {
     ONE_R("1-R分类"),
     PART("PART决策");
     private String desc;
-    private static Logger logger = LoggerFactory.getLogger(ModelTypeEnum.class);
-    private ModelTypeEnum(String desc){
+    private static final Logger logger = LoggerFactory.getLogger(ModelTypeEnum.class);
+    ModelTypeEnum(String desc){
         this.desc = desc;
     }
 

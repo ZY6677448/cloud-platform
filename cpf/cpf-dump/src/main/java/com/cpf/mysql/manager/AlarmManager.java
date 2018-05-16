@@ -24,7 +24,7 @@ import java.util.List;
 public class AlarmManager extends ServiceTemplate {
     @Autowired
     private AlarmDAO alarmDAO;
-    private static Logger logger = LoggerFactory.getLogger(AlarmManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(AlarmManager.class);
 
     /**
      * 保存预警信息
@@ -42,13 +42,59 @@ public class AlarmManager extends ServiceTemplate {
             }
 
             @Override
-            public CallbackResult<Object> executeAction() throws Exception {
+            public CallbackResult<Object> executeAction() {
                 AlarmPO alarmPO = alarmDAO.save(DOPOConverter.alarmDO2PO(alarmDO));
                 return new CallbackResult<>(DOPOConverter.alarmPO2DO(alarmPO),true);
             }
         });
         return (CallbackResult<AlarmDO>)result;
     }
+
+    /**
+     * 根据id获取报警信息
+     * @param id
+     * @return
+     */
+    public CallbackResult<AlarmDO> get(Long id){
+        Object result = execute(logger, "get", new ServiceExecuteTemplate() {
+            @Override
+            public CallbackResult<Object> checkParams() {
+                if(ValidationUtil.isNotNull(id)){
+                    return CallbackResult.success();
+                }
+                return CallbackResult.failure();
+            }
+
+            @Override
+            public CallbackResult<Object> executeAction() {
+                AlarmPO alarmPO = alarmDAO.getById(id);
+                return new CallbackResult<>(DOPOConverter.alarmPO2DO(alarmPO),true);
+            }
+        });
+        return (CallbackResult<AlarmDO>)result;
+    }
+
+    /**
+     * 根据是否过期获取报警信息
+     * @param expire
+     * @return
+     */
+    public CallbackResult<List<AlarmDO>> get(boolean expire){
+        Object result = execute(logger, "get", new ServiceExecuteTemplate() {
+            @Override
+            public CallbackResult<Object> checkParams() {
+                return CallbackResult.success();
+            }
+
+            @Override
+            public CallbackResult<Object> executeAction() {
+                List<AlarmPO> alarmPOList = alarmDAO.getByExpire(expire);
+                return new CallbackResult<>(DOPOConverter.alarmPOS2DOS(alarmPOList),true);
+            }
+        });
+        return (CallbackResult<List<AlarmDO>>)result;
+    }
+
 
     /**
      * 获取所有预警信息

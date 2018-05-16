@@ -25,9 +25,9 @@
             <el-menu-item index="AlgorithmConfig" @click="$router.push('/AlgorithmConfig')">
              预警算法
             </el-menu-item>
-            <el-menu-item index="SolutionConfig" @click="$router.push('/SolutionConfig')">
+            <!-- <el-menu-item index="SolutionConfig" @click="$router.push('/SolutionConfig')">
              解决方案
-            </el-menu-item>
+            </el-menu-item> -->
          </el-menu> 
         </el-col> 
       </el-row> 

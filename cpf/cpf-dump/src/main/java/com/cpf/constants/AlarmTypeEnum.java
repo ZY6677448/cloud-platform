@@ -15,7 +15,7 @@ public enum  AlarmTypeEnum {
      */
     MONITOR("监控报警");
     private String desc;
-    private AlarmTypeEnum(String desc){
+    AlarmTypeEnum(String desc){
         this.desc = desc;
     }
 

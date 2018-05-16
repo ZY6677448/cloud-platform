@@ -33,8 +33,7 @@ public class CallbackResult<T> {
         this.errorDesc = errorDesc.getErrorMSG();
     }
     public static CallbackResult<Object> failure(){
-        CallbackResult<Object> callbackResult = new CallbackResult<Object>(false);
-        return callbackResult;
+        return new CallbackResult<>(false);
     }
     public static CallbackResult<Object> failure(ErrorDesc errorDesc){
         CallbackResult<Object> callbackResult = CallbackResult.failure();
@@ -48,7 +47,6 @@ public class CallbackResult<T> {
         return callbackResult;
     }
     public static CallbackResult<Object> success(){
-        CallbackResult<Object> callbackResult = new CallbackResult<Object>(true);
-        return callbackResult;
+        return new CallbackResult<>(true);
     }
 }

@@ -29,7 +29,7 @@ public class AlarmPO {
     @Lob
     private String data;
     /**
-     * 报警触发的监控规则
+     * 报警触发的监控规则，当报警类型为监控报警时使用
      */
     @Lob
     private String rule;
@@ -37,4 +37,8 @@ public class AlarmPO {
      * 报警时间
      */
     private Date time;
+    /**
+     * 报警是否失效
+     */
+    private Boolean expire;
 }

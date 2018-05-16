@@ -30,4 +30,8 @@ public class AlarmDO {
      * 报警时间
      */
     private Date time;
+    /**
+     * 报警是否失效
+     */
+    private Boolean expire;
 }

@@ -22,4 +22,19 @@ public interface AlarmDAO extends CrudRepository<AlarmPO, Long> {
      */
     @Override
     List<AlarmPO> findAll();
+
+    /**
+     * 根据id获取对象
+     * @param id
+     * @return
+     */
+    AlarmPO getById(Long id);
+
+    /**
+     * 根据过期属性获取对象
+     * @param expire
+     * @return
+     */
+    List<AlarmPO> getByExpire(boolean expire);
+
 }

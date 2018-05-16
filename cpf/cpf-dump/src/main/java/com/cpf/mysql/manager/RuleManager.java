@@ -21,7 +21,7 @@ import java.util.List;
 public class RuleManager extends ServiceTemplate {
     @Autowired
     private RuleDAO ruleDAO;
-    private static Logger logger = LoggerFactory.getLogger(RuleManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(RuleManager.class);
 
     /**
      * 保存监控规则

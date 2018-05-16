@@ -9,7 +9,7 @@
    </el-row>
     <el-row >
       <el-collapse >
-        <el-collapse-item v-for="model in aggreModel.models" :key="model.id" :title="calTitle(model.name,model.weight)" >
+        <el-collapse-item v-for="model in aggreModel.models" :key="model.id" :title="calTitle(model.name,model.weight,model.correctRate)" >
           <AlgorithmEdit :model="model"  @deleteModel="deleteModel"></AlgorithmEdit>
         </el-collapse-item>
       </el-collapse>
@@ -40,8 +40,8 @@ export default {
     }
   },
   methods: {
-    calTitle(name, weight) {
-      return name + "   权重：" + weight;
+    calTitle(name, weight,correctRate) {
+      return name + "   权重：" + weight + "  正确率: " + correctRate;
     },
     openDialog() {
       this.$store.commit("openAlgAddDialog");

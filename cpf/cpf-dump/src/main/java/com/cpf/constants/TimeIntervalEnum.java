@@ -12,7 +12,7 @@ public enum TimeIntervalEnum {
     /**
      * 小时
      */
-    HOUT("h"),
+    HOUR("h"),
     /**
      * 天
      */
@@ -30,7 +30,7 @@ public enum TimeIntervalEnum {
     private static final Long H = M*60;
     private static final Long D = H*24;
     private static final Long W = D*7;
-    private TimeIntervalEnum(String unit){
+    TimeIntervalEnum(String unit){
         this.unit = unit;
     }
 
@@ -44,7 +44,7 @@ public enum TimeIntervalEnum {
      * @param num 时间数值
      * @return
      */
-    private static String generateInterval(TimeIntervalEnum intervalEnum, Long num){
+    public  static String generateInterval(TimeIntervalEnum intervalEnum, Long num){
         return  num+intervalEnum.getUnit();
     }
 

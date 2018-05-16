@@ -9,38 +9,30 @@ import com.cpf.logger.BusinessLogger;
 import com.cpf.mysql.manager.DO.ModelDO;
 import com.cpf.mysql.manager.DO.ModelOptionDO;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.core.*;
-import weka.core.converters.ArffSaver;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
 /**
  * @author jieping
  * @create 2018-04-08
  **/
+@Component
 public class ModelUtil  {
-    private static Logger logger = LoggerFactory.getLogger(ModelUtil.class);
-    public static final String MODEL_PATH =  "cpf-dump/src/main/resources/";
-    public static final String MODEL_SUFFIX = ".model";
-    public static final String ARFF_SUFFIX = ".arff";
-    /**
-     * 整数的正则表达式
-     */
-    private static final Pattern PATTTERN = Pattern.compile("^[-\\+]?[\\d]*$");
+    private static final Logger logger = LoggerFactory.getLogger(ModelUtil.class);
+    private static  String MODEL_PATH;
+    private static final String MODEL_SUFFIX = ".model";
+    private static final String ARFF_SUFFIX = ".arff";
 
     /**
      * 给定监控数据，训练指定的算法模型
@@ -58,9 +50,18 @@ public class ModelUtil  {
         OptionHandler optionHandler = (OptionHandler) classifier;
         //设置模型参数
         optionHandler.setOptions(getOptions(modelDO));
+        //将模型数据转换成instances格式
+        Instances instances = MonitorUtil.monitorDOS2Instances(monitorDOList);
+        //数据预处理
+        instances = InstancesBuilder.construct(instances).standardize().replaceMissingValues().build();
         try {
             //训练数据
-            classifier.buildClassifier(ModelUtil.monitorDOS2Instances(monitorDOList));
+            classifier.buildClassifier(instances);
+            //评估数据
+            instances = InstancesBuilder.construct(instances).resample(10D).build();
+            Evaluation evaluation = new Evaluation(instances);
+            evaluation.crossValidateModel(classifier,instances,10,new Random(1));
+            modelDO.setCorrectRate(evaluation.pctCorrect());
             //训练后的模型持久化
             serialization(modelDO.getId(),classifier);
         } catch (Exception e) {
@@ -105,7 +106,7 @@ public class ModelUtil  {
                     "CLASSIFIER_SET_OPTION_ERROR",
                     "算法模型设置参数异常",
                     logger);
-            return;        }
+        }
     }
 
     /**
@@ -114,7 +115,7 @@ public class ModelUtil  {
      * @return
      */
     public static Object deSerialization(Long id){
-        Object classifier = null;
+        Object classifier;
         try {
             classifier  =  SerializationHelper.read(generateModelFileName(id));
         } catch (Exception e) {
@@ -126,7 +127,7 @@ public class ModelUtil  {
      * 设置模型参数，并持久化
      * @param modelDO
      */
-        public static void setOptions(ModelDO modelDO){
+    public static void setOptions(ModelDO modelDO){
         OptionHandler optionHandler = (OptionHandler) deSerialization(modelDO.getId());
         try {
             optionHandler.setOptions(getOptions(modelDO));
@@ -159,91 +160,6 @@ public class ModelUtil  {
     }
 
     /**
-     * 监控数据转成weka接受的数据
-     * @param monitorDOList
-     * @return
-     */
-    public static Instances monitorDOS2Instances(List<MonitorDO> monitorDOList){
-        if(CollectionUtils.isEmpty(monitorDOList)){
-            return null;
-        }
-        Map<String,List<String>> monitorMap = Maps.newHashMap();
-        Random random = new Random();
-        //获取monitordo的所有值，map的key为属性名，
-        for(MonitorDO monitorDO : monitorDOList){
-            monitorDO.getData().put("danger",String.valueOf(random.nextBoolean()));
-            for(Map.Entry<String,String> entry : monitorDO.getData().entrySet()) {
-                List<String> list = monitorMap.get(entry.getKey());
-                if(list == null){
-                    list = Lists.newArrayList();
-                    monitorMap.put(entry.getKey(),list);
-                }
-                list.add(entry.getValue());
-            }
-        }
-        List<String> tagList = Lists.newArrayList(RuleTypeEnum.CPU.getTagList());
-        ArrayList<Attribute> attributeArrayList = Lists.newArrayList();
-        for(String key : monitorMap.keySet()){
-            Attribute attribute = null;
-            //如果该属性为标签属性，则设置为nominal属性
-            if(tagList.contains(key)){
-                List<String> nominalList = monitorMap.get(key).stream().distinct().collect(Collectors.toList());
-                attribute = new Attribute(key,nominalList);
-            }else {
-                attribute = new Attribute(key);
-            }
-            attributeArrayList.add(attribute);
-        }
-        Map<String,Attribute> attributeMap = attributeArrayList.stream().collect(Collectors.toMap(Attribute::name,Function.identity()));
-        Instances instances = new Instances(monitorDOList.get(0).getType(),attributeArrayList,0);
-        instances.setClassIndex(instances.numAttributes()-1);
-        for(MonitorDO monitorDO : monitorDOList){
-            Instance instance = new DenseInstance(attributeArrayList.size());
-            for(Map.Entry<String,String> entry : monitorDO.getData().entrySet()){
-                if(tagList.contains(entry.getKey())){
-                    instance.setValue(attributeMap.get(entry.getKey()),entry.getValue());
-                }else {
-                    instance.setValue(attributeMap.get(entry.getKey()),new Double(entry.getValue()));
-
-                }
-            }
-            instances.add(instance);
-        }
-        return instances;
-    }
-
-    /**
-     * 单条监控数据转成weka的数据
-     * @param monitorDO
-     * @return
-     */
-    public static Instance monitorDO2Instance(MonitorDO monitorDO){
-        if(monitorDO == null){
-            return null;
-        }
-        Instances instances = monitorDOS2Instances(Lists.newArrayList(monitorDO));
-        return instances.get(0);
-    }
-    /**
-     * 将监控数据转换为arff文件
-     * @param monitorDOList
-     * @return 文件路径+文件名称
-     */
-    public static String monitorDOS2Arff(List<MonitorDO> monitorDOList){
-        Instances instances = monitorDOS2Instances(monitorDOList);
-        ArffSaver saver = new ArffSaver();
-        saver.setInstances(instances);
-        String fileName = generateArffFileName(System.currentTimeMillis());
-        try {
-            saver.setFile(new File(fileName));
-            saver.writeBatch();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return fileName;
-    }
-
-    /**
      * 删除本地算法模型
      * @param modelDO
      */
@@ -272,9 +188,11 @@ public class ModelUtil  {
      */
     public static void deleteModels(List<ModelDO> modelDOList){
         if(CollectionUtils.isNotEmpty(modelDOList)){
-            modelDOList.forEach((modelDO -> deleteModel(modelDO)));
+            modelDOList.forEach((ModelUtil::deleteModel));
         }
     }
+
+
 
     /**
      * 根据模型id产生模型的全路径名
@@ -284,42 +202,10 @@ public class ModelUtil  {
     private static String generateModelFileName(Long id){
         return MODEL_PATH + id + MODEL_SUFFIX;
     }
-    /**
-     * 根据模型id产生训练样本的全路径名
-     * @param id
-     * @return
-     */
-    private static String generateArffFileName(Long id){
-        return MODEL_PATH + id + ARFF_SUFFIX;
 
-    }
-    /**
-     * 判断value是否符合option的指定数据类型
-     * @param value
-     * @param option
-     * @return
-     */
-    private  static boolean judgeOptionType(String value, ModelOptionDO option){
-        if(option.getValueType() == OptionTypeEnum.INTEGER){
-            return isInteger(value);
-        }
-        if(option.getValueType() == OptionTypeEnum.DOUBLE){
-            return NumberUtils.isDigits(value);
-        }
-        if(option.getValueType() == OptionTypeEnum.ENUM){
-            //TODO 需要修改为指定的枚举
-            return true;
-        }
-        return false;
-    }
 
-    /**
-     * 判断是否为整数
-     * @param str
-     * @return
-     */
-    private static boolean isInteger(String str) {
-        return PATTTERN.matcher(str).matches();
+    @Value("${model.path}")
+    public  void setModelPath(String modelPath) {
+        MODEL_PATH = modelPath;
     }
-
 }

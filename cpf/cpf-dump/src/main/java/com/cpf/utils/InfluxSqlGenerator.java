@@ -3,6 +3,8 @@ package com.cpf.utils;
 import com.cpf.constants.TimeIntervalEnum;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.List;
@@ -33,7 +35,7 @@ public class InfluxSqlGenerator {
      * @param endTime 结束时间
      * @return
      */
-    public static String meanDataSQL(Map<String,String> tags, String tableName, Long startTime, Long endTime){
+    public static String meanDataSql(Map<String,String> tags, String tableName, Long startTime, Long endTime){
         return meanSql(tags,null,tableName,startTime,endTime) + FILL;
     }
 
@@ -52,21 +54,46 @@ public class InfluxSqlGenerator {
     }
 
     /**
-     *  生成 select * from tableName where  and time > startTime and time < endTime ;
+     *  生成 select * from tableName where [and tag=value] and time > startTime and time < endTime ;
      * @param tableName
      * @param startTime
      * @param endTime
      * @param limit
      * @return
      */
-    public static String dataSQL(String tableName,Map<String,String> tagMap,Long startTime,Long endTime,Long limit){
-        StringBuffer sql = new StringBuffer();
-        sql.append(SELECT + ALL + FROM + tableName + condition(tagMap,startTime,endTime));
+    public static String dataSql(String tableName, Map<String,String> tagMap, Long startTime, Long endTime, Long limit){
+        StringBuilder sql = new StringBuilder();
+        sql.append(SELECT + ALL + FROM).append(tableName).append(condition(tagMap, startTime, endTime));
         if(limit != null){
-            sql.append(LIMIT + limit);
+            sql.append(LIMIT).append(limit);
         }
         sql.append(FINISH);
         return sql.toString();
+    }
+
+    /**
+     * 查询最新数据
+     * select * from tableName where [and tag=value] order by time desc limit 1
+     * @param tableName
+     * @param tagMap
+     * @return
+     */
+    public static String recentDataSql(String tableName,Map<String,String> tagMap){
+        return (SELECT + ALL + FROM + tableName + condition(tagMap, null, null) + " order by time desc limit 1") +
+                FINISH;
+    }
+
+    /**
+     * 生成 select [,derivative(key2,unit)] from tableName where [and tag=value] order by time desc limit 1
+     * @param tableName
+     * @param keys
+     * @param unit
+     * @param tagMap
+     * @return
+     */
+    public static String changeRateSql(String tableName,List<String> keys,String unit,Map<String,String> tagMap){
+        return (SELECT + derivative(keys, unit) + FROM + tableName + condition(tagMap, null, null)
+                + " order by time desc limit 1");
     }
 
     /**
@@ -112,12 +139,11 @@ public class InfluxSqlGenerator {
         List<String> conditionList = Lists.newArrayList();
         if(MapUtils.isNotEmpty(conditionMap)){
             for(Map.Entry<String,String> tag : conditionMap.entrySet()){
-                StringBuffer condition = new StringBuffer();
-                condition.append(tag.getKey());
-                condition.append("='");
-                condition.append(tag.getValue());
-                condition.append("'");
-                conditionList.add(condition.toString());
+                String condition = tag.getKey() +
+                        "='" +
+                        tag.getValue() +
+                        "'";
+                conditionList.add(condition);
             }
         }
         if(startTime != null){
@@ -128,4 +154,22 @@ public class InfluxSqlGenerator {
         }
         return WHERE + Joiner.on(AND).join(conditionList);
     }
+
+    private static String derivative(List<String> keys, String unit){
+        if(CollectionUtils.isEmpty(keys)){
+            return "derivative(*," + unit + ")";
+        }
+        List<String> derivatives = Lists.newArrayList();
+        keys.forEach(key-> derivatives.add("derivative(" + key + "," + unit + ")"));
+        return Joiner.on(COMMA).join(derivatives);
+    }
+    public static void main(String[] args){
+        List<String> keys = Lists.newArrayList("idal_time","pec_time");
+        Map<String,String> tagMap = Maps.newHashMap();
+        tagMap.put("instance","0");
+        tagMap.put("host","windows");
+        System.out.println(changeRateSql("win_cpu",keys,"1h",tagMap));
+        System.out.println(recentDataSql("win_cpu",tagMap));
+    }
+
 }

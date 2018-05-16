@@ -13,9 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * @author jieping
@@ -34,7 +31,7 @@ public class ModelController {
      */
     @RequestMapping(value = "/modelType", method = RequestMethod.GET)
     ResponseEntity<Object> modelType(){
-        return  new ResponseEntity<Object>(new CallbackResult<List<Map<String,String>>>(ModelTypeEnum.getViewOptions(),true),HttpStatus.OK);
+        return new ResponseEntity<>(new CallbackResult<>(ModelTypeEnum.getViewOptions(), true), HttpStatus.OK);
     }
     /**
      * 获取应用场景的类型
@@ -42,7 +39,7 @@ public class ModelController {
      */
     @RequestMapping(value = "/scenes", method = RequestMethod.GET)
     ResponseEntity<Object> scenes(){
-        return  new ResponseEntity<Object>(new CallbackResult<List<Map<String,String>>>(RuleTypeEnum.getViewOptions(),true),HttpStatus.OK);
+        return new ResponseEntity<>(new CallbackResult<>(RuleTypeEnum.getViewOptions(), true), HttpStatus.OK);
     }
     /**
      * 获取模型类
@@ -55,21 +52,19 @@ public class ModelController {
         CallbackResult<AggreModelDO> result = aggreModelManager.get(aggreModelId);
         if(result.getSuccess()){
             ModelDO modelDO = ModelFactory.getModel(name,modelType);
-            return new ResponseEntity<Object>(aggreModelManager.addModel(result.getResult(),modelDO),HttpStatus.OK);
+            return new ResponseEntity<>(aggreModelManager.addModel(result.getResult(), modelDO), HttpStatus.OK);
 
         }
-        return new ResponseEntity<Object>(result,HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     /**
      * 获取所有的模型
-     * @param name
-     * @param modelType
      * @return
      */
     @RequestMapping(value = "/models",method = RequestMethod.GET)
     ResponseEntity<Object> models(){
-        return new ResponseEntity<Object>(modelManager.all(),HttpStatus.OK);
+        return new ResponseEntity<>(modelManager.all(), HttpStatus.OK);
     }
     /**
      * 保存模型
@@ -78,8 +73,8 @@ public class ModelController {
      */
     @RequestMapping(value = "/model",method = RequestMethod.POST)
     ResponseEntity<Object> model(@RequestBody ModelDO modelDO){
-        CallbackResult<ModelDO> result = modelManager.modifyModel(modelDO);
-        return new ResponseEntity<Object>(result,HttpStatus.OK);
+        CallbackResult<ModelDO> result = modelManager.modifyModel(modelDO,true);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     /**
@@ -90,7 +85,7 @@ public class ModelController {
     @RequestMapping(value = "/model",method = RequestMethod.DELETE)
     ResponseEntity<Object> model(@RequestParam Long id){
         CallbackResult<Object> result = modelManager.delete(id);
-        return new ResponseEntity<Object>(result,HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     /**
@@ -99,7 +94,7 @@ public class ModelController {
      */
     @RequestMapping(value = "/aggremodels",method = RequestMethod.GET)
     ResponseEntity<Object> aggremodels(){
-        return new ResponseEntity<Object>(aggreModelManager.all(),HttpStatus.OK);
+        return new ResponseEntity<>(aggreModelManager.all(), HttpStatus.OK);
     }
 
     /**
@@ -110,11 +105,11 @@ public class ModelController {
     @RequestMapping(value = "/aggremodel",method = RequestMethod.POST)
     ResponseEntity<Object> aggremodel(@RequestBody AggreModelDO aggreModelDO){
         CallbackResult<AggreModelDO> result = aggreModelManager.save(aggreModelDO);
-        return new ResponseEntity<Object>(result,HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
     @RequestMapping(value = "/aggremodel",method = RequestMethod.GET)
     ResponseEntity<Object> getAggreModel( Long id){
-        return new ResponseEntity<Object>(aggreModelManager.get(id),HttpStatus.OK);
+        return new ResponseEntity<>(aggreModelManager.get(id), HttpStatus.OK);
     }
 
     /**
@@ -123,7 +118,7 @@ public class ModelController {
      * @return
      */
     @RequestMapping(value = "/aggremodel",method = RequestMethod.DELETE)
-    ResponseEntity<Object> deleteAggreModel(@RequestParam Long id){
-        return new ResponseEntity<Object>(aggreModelManager.delete(id),HttpStatus.OK);
+    ResponseEntity<Object> aggremodel(@RequestParam Long id){
+        return new ResponseEntity<>(aggreModelManager.delete(id), HttpStatus.OK);
     }
 }

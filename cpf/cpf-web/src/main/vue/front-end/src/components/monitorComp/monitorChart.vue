@@ -95,7 +95,9 @@ export default {
         for (let i = 0; i < size; i++) {
           let tempData = [];
           for (let j = 0; j < 3; j++) {
+            if(index < response.result.length){
             tempData.push(response.result[index++]);
+            }
           }
           this.AVGData.push(tempData);
         }

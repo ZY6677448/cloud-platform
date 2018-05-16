@@ -6,3 +6,5 @@ cpf/cpf-dump/target/
 cpf/cpf-web/target/
 cpf/cpf-framework/target/
 cpf/cpf-core/target/
+cpf/cpf-web/src/main/resources/application-dev.properties
+cpf/cpf-web/src/main/resources/application-prod.properties
